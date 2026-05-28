@@ -1,0 +1,46 @@
+version: 1
+
+name: "teleport-entangle_first"
+author: "Anonymous"
+metadata:
+  tags: ["example", "teleport", "optimized"]
+  notes: ""
+
+params:
+  # Global hardware / network configuration (JSON)
+  config_path: "examples/configs/nv.json"
+
+  nodes:
+    - node_name: alice
+      file_path: alice.iqoala
+      num_qubits: 2
+      inputs: {}
+
+    - node_name: bob
+      file_path: bob.iqoala
+      num_qubits: 2
+      inputs: {}
+
+  # optional; default "DM"
+  qstate_formalism: "DM"
+
+execution:
+  iterations: 15
+  cpu_count: 8
+  on_failure: "stop"                   # "stop" | "continue"
+  store_logs: false                    # optional
+  log_level: "INFO"                    # optional
+
+pipeline:
+  generator:
+    type: "heuristic"                  # or "compare"
+    params:
+      label: "teleport-entangle_first"             # required, human-readable
+      program_dir: "examples/teleport/entangle_first"
+
+  analyzer:
+    type: "simple"
+    params:
+      node: "bob"              # node_name used above
+      outcome_key: "%3"        # key in outcome.values
+      success_value: 0         # value meaning success

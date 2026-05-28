@@ -1,0 +1,163 @@
+version: 1
+
+name: "bqc-compile-and-compare"
+author: "Anonymous"
+metadata:
+  tags: ["example", "bqc", "compilator", "compare"]
+  notes: "Compile client/server, run optimizer passes, translate from unoptimized vs optimized, compare simulation."
+
+params:
+  # copied into dataset by your pipeline; compilator reads the copied one
+  config_path: "examples/configs/perfect.json"
+
+  # nodes will reference compilator outputs (see file_path.from_compilator below)
+  nodes:
+  - node_name: client
+    num_qubits: 2
+    inputs: {}
+
+  - node_name: server
+    num_qubits: 1
+    inputs: {}
+
+  qstate_formalism: "DM"
+
+execution:
+  iterations: 100
+  cpu_count: 8
+  on_failure: "stop"
+  store_logs: false
+  log_level: "INFO"
+
+pipeline:
+  compilator:
+    enabled: true
+    artifact_subdir: "compilator"
+    repeats: 1
+    on_failure: "stop"
+
+    python:
+      # run relative to YAML directory; your repo root in this example
+      workdir: "."
+      venv_python: null
+      extra_sys_path: []
+
+    # Values used in python compile args/kwargs templates
+    variables:
+      n: 1
+      singular_comm_ops: true
+
+    # Python sources -> produce HIR MLIR on stdout
+    python_sources:
+      - name: "client"
+        source_file: "client.py"
+        function: "client_line_graph"
+        method: "compile"
+        method_args: ["server", "{var:n}"]
+        method_kwargs:
+          singular_comm_ops: "{var:singular_comm_ops}"
+        result_tuple_index: 1
+        output_file: "{source_name}.hir.mlir"
+
+      - name: "server"
+        source_file: "server.py"
+        function: "server_line_graph"
+        method: "compile"
+        method_args: ["client", "{var:n}"]
+        method_kwargs:
+          singular_comm_ops: "{var:singular_comm_ops}"
+        result_tuple_index: 1
+        output_file: "{source_name}.hir.mlir"
+
+    tools:
+      optimizer:
+        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-opt"
+        base_flags: []
+          # - "--qoala-opt-single-gate-duration={json:single_gate_duration}"
+          # - "--qoala-opt-single-gate-error={json:single_gate_fid}"
+          # - "--qoala-opt-two-gate-duration={json:two_gate_duration}"
+          # - "--qoala-opt-dual-gate-error={json:two_gate_fid}"
+          # - "--qoala-opt-latency={json:latency}"
+          # - "--qoala-opt-link-duration={json:link_duration}"
+          # - "--qoala-opt-host-instr-time={json:host_instr_time}"
+          # - "--qoala-opt-host-peer-latency={json:host_peer_latency}"
+          # - "--qoala-opt-qnos-instr-time={json:qnos_instr_time}"
+          # - "--qoala-opt-qubit-lifetime={json:t2}"
+
+      translator:
+        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-translate"
+        base_flags: []
+        flags: []   # global translator flags (if any)
+
+    # Two simulation program variants produced by compiling+optimizing once:
+    # - "unoptimized": translate from optimizer pass 3
+    # - "optimized":   translate from optimizer pass 4
+    #
+    # We keep optimizer passes the same for both, only translation differs.
+    variants:
+      - name: "bqc"
+        optimizer_passes:
+          - name: "step1_hir_to_mir"
+            flags: ["--lower-qoala-hir-to-mir"]
+            output_file: "{source_name}.1.mir.mlir"
+
+          - name: "step2_mir_to_lir"
+            flags: ["--lower-qoala-mir-to-lir"]
+            output_file: "{source_name}.2.lir.mlir"
+
+          # - name: "step3_unopt"
+          #   flags: ["--qoalahost-reorder-blocks", "--qoala-opt-unoptimize"]
+          #   output_file: "{source_name}.3.unopt.lir.mlir"
+
+          - name: "step4_opt"
+            flags: ["--qoalahost-reorder-blocks"]
+            output_file: "{source_name}.4.opt.lir.mlir"
+
+          # - name: "step5_qmem_eff_from_3"
+          #   depends_on: "step3_unopt"
+          #   flags: ["--qoalahost-show-analysis-qmem-eff"]
+          #   output_file: "{source_name}.5.qmem_eff.from3.txt"
+
+          # - name: "step6_esp_from_3"
+          #   depends_on: "step3_unopt"
+          #   flags: ["--qoalahost-show-analysis-esp"]
+          #   output_file: "{source_name}.6.esp.from3.txt"
+
+          # - name: "step7_qmem_eff_from_4"
+          #   depends_on: "step4_opt"
+          #   flags: ["--qoalahost-show-analysis-qmem-eff"]
+          #   output_file: "{source_name}.7.qmem_eff.from4.txt"
+
+          # - name: "step8_esp_from_4"
+          #   depends_on: "step4_opt"
+          #   flags: ["--qoalahost-show-analysis-esp"]
+          #   output_file: "{source_name}.8.esp.from4.txt"
+
+        # Translator needs to run twice from two different optimizer outputs:
+        # "program_variants" is the mapping the generator will reference.
+        program_variants:
+          - name: "unoptimized"
+            input_pass: "step2_mir_to_lir"
+            flags: ["--mlir-to-iqoala"]
+            output_file: "{source_name}.unoptimized.iqoala"
+
+          - name: "optimized"
+            input_pass: "step4_opt"
+            flags: ["--mlir-to-iqoala"]
+            output_file: "{source_name}.optimized.iqoala"
+
+  generator:
+    type: "compare"
+    params:
+      programs:
+        - label: "unoptimized"
+          program_variant: "unoptimized"
+        - label: "optimized"
+          program_variant: "optimized"
+
+  analyzer:
+    type: "simple"
+    params:
+      node: "client"
+      outcome_key: "%3"
+      success_value: 0

@@ -1,0 +1,162 @@
+version: 1
+
+name: "bqc-streaming-compile-and-compare"
+author: "Anonymous"
+metadata:
+  tags: ["bqc", "bqc-streaming", "compilator", "compare"]
+  notes: >
+    Streaming BQC on a line graph (n=3).
+    Client: all |+> init, all EPRs, all Bell meas upfront; streaming classical comms.
+    Server: all EPRs upfront; streaming recv/apply/measure.
+    Compile both, compare unoptimized vs optimized simulation.
+
+params:
+  config_path: "benchmark/bqc/trapped-ions_150.json"
+
+  nodes:
+  - node_name: client
+    num_qubits: 6    # 2*n
+    inputs: {}
+
+  - node_name: server
+    num_qubits: 3    # n
+    inputs: {}
+
+  qstate_formalism: "DM"
+
+execution:
+  iterations: 10000
+  cpu_count: 11
+  on_failure: "stop"
+  store_logs: false
+  log_level: "INFO"
+
+pipeline:
+  compilator:
+    enabled: true
+    artifact_subdir: "compilator"
+    repeats: 1
+    on_failure: "stop"
+
+    python:
+      workdir: "."
+      venv_python:
+      extra_sys_path: []
+
+    variables:
+      n: 3
+      singular_comm_ops: true
+
+    python_sources:
+    - name: "client"
+      source_file: "client.py"
+      function: "client_bqc_streaming"
+      method: "compile"
+      method_args: ["server", "{var:n}"]
+      method_kwargs:
+        singular_comm_ops: "{var:singular_comm_ops}"
+      result_tuple_index: 1
+      output_file: "{source_name}.hir.mlir"
+
+    - name: "server"
+      source_file: "server.py"
+      function: "server_bqc_streaming"
+      method: "compile"
+      method_args: ["client", "{var:n}"]
+      method_kwargs:
+        singular_comm_ops: "{var:singular_comm_ops}"
+      result_tuple_index: 1
+      output_file: "{source_name}.hir.mlir"
+
+    tools:
+      optimizer:
+        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-opt"
+        base_flags: []
+
+      translator:
+        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-translate"
+        base_flags: []
+        flags: []
+
+    variants:
+    - name: "bqc"
+      optimizer_passes:
+      - name: "step1_hir_to_mir"
+        flags: ["--lower-qoala-hir-to-mir"]
+        output_file: "{source_name}.1.mir.mlir"
+
+      - name: "step2_mir_to_lir"
+        flags: ["--lower-qoala-mir-to-lir"]
+        output_file: "{source_name}.2.lir.mlir"
+
+      - name: "step4_opt"
+        flags: ["--qoalahost-reorder-blocks"]
+        output_file: "{source_name}.4.opt.lir.mlir"
+
+      - name: step_esp_unopt
+        depends_on: step2_mir_to_lir
+        flags:
+        - --qoalahost-show-analysis-esp
+        - --qoala-opt-single-gate-duration={json:single_gate_duration}
+        - --qoala-opt-single-gate-error={json:single_gate_error}
+        - --qoala-opt-two-gate-duration={json:two_gate_duration}
+        - --qoala-opt-dual-gate-error={json:two_gate_error}
+        - --qoala-opt-latency={json:latency}
+        - --qoala-opt-link-duration={json:link_duration}
+        - --qoala-opt-host-instr-time={json:host_instr_time}
+        - --qoala-opt-host-peer-latency={json:host_peer_latency}
+        - --qoala-opt-qnos-instr-time={json:qnos_instr_time}
+        - --qoala-opt-qubit-lifetime={json:t2}
+        output_file: '{source_name}.esp.unopt.txt'
+      - name: step_qmem_unopt
+        depends_on: step2_mir_to_lir
+        flags:
+        - --qoalahost-show-analysis-qmem-eff
+        output_file: '{source_name}.qmem_eff.unopt.txt'
+      - name: step_esp_opt
+        depends_on: step4_opt
+        flags:
+        - --qoalahost-show-analysis-esp
+        - --qoala-opt-single-gate-duration={json:single_gate_duration}
+        - --qoala-opt-single-gate-error={json:single_gate_error}
+        - --qoala-opt-two-gate-duration={json:two_gate_duration}
+        - --qoala-opt-dual-gate-error={json:two_gate_error}
+        - --qoala-opt-latency={json:latency}
+        - --qoala-opt-link-duration={json:link_duration}
+        - --qoala-opt-host-instr-time={json:host_instr_time}
+        - --qoala-opt-host-peer-latency={json:host_peer_latency}
+        - --qoala-opt-qnos-instr-time={json:qnos_instr_time}
+        - --qoala-opt-qubit-lifetime={json:t2}
+        output_file: '{source_name}.esp.opt.txt'
+      - name: step_qmem_opt
+        depends_on: step4_opt
+        flags:
+        - --qoalahost-show-analysis-qmem-eff
+        output_file: '{source_name}.qmem_eff.opt.txt'
+
+      program_variants:
+      - name: "unoptimized"
+        input_pass: "step2_mir_to_lir"
+        flags: ["--mlir-to-iqoala"]
+        output_file: "{source_name}.unoptimized.iqoala"
+
+      - name: "optimized"
+        input_pass: "step4_opt"
+        flags: ["--mlir-to-iqoala"]
+        output_file: "{source_name}.optimized.iqoala"
+
+  generator:
+    type: "compare"
+    params:
+      programs:
+      - label: "unoptimized"
+        program_variant: "unoptimized"
+      - label: "optimized"
+        program_variant: "optimized"
+
+  analyzer:
+    type: "simple"
+    params:
+      node: "client"
+      outcome_key: "%15"
+      success_value: 0

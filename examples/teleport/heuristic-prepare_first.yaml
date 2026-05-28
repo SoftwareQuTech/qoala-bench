@@ -1,0 +1,41 @@
+version: 1
+
+name: "teleport-prepare_first"
+author: "Anonymous"
+metadata:
+  tags: ["example", "teleport"]
+  notes: ""
+
+params:
+  config_path: "examples/configs/nv.json"
+  nodes:
+    - node_name: alice
+      file_path: alice.iqoala
+      num_qubits: 2
+      inputs: {}
+
+    - node_name: bob
+      file_path: bob.iqoala
+      num_qubits: 2
+      inputs: {}
+
+execution:
+  iterations: 15
+  cpu_count: 8
+  on_failure: "stop"                   # "stop" | "continue"
+  store_logs: false                    # optional
+  log_level: "INFO"                    # optional
+
+pipeline:
+  generator:
+    type: "heuristic"                  # or "compare"
+    params:
+      label: "teleport-prepare_first"  # required, human-readable
+      program_dir: "examples/teleport/prepare_first"
+
+  analyzer:
+    type: "simple"
+    params:
+      node: "bob"              # key in batch_results
+      outcome_key: "%3"        # key in outcome.values
+      success_value: 0         # value meaning success

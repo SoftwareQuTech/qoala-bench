@@ -1,0 +1,120 @@
+version: 1
+
+name: "bqc-streaming-compile-only"
+author: "Anonymous"
+metadata:
+  tags: ["bqc", "bqc-streaming", "compilator", "compile-only"]
+  notes: >
+    Streaming BQC on a line graph (n=1).
+    Compilation-only benchmark: run optimizer passes 10000 times to measure compile time.
+    No simulation is performed.
+
+params:
+  config_path: "benchmark/bqc/trapped-ions_rotterdam3-leiden3.json"
+
+  nodes:
+  - node_name: client
+    num_qubits: 2    # 2*n
+    inputs: {}
+
+  - node_name: server
+    num_qubits: 1    # n
+    inputs: {}
+
+  qstate_formalism: "DM"
+
+execution:
+  iterations: 1
+  cpu_count: 11
+  on_failure: "stop"
+  store_logs: false
+  log_level: "INFO"
+
+pipeline:
+  compilator:
+    enabled: true
+    artifact_subdir: "compilator"
+    repeats: 10000
+    on_failure: "stop"
+
+    python:
+      workdir: "."
+      venv_python:
+      extra_sys_path: []
+
+    variables:
+      n: 1
+      singular_comm_ops: true
+
+    python_sources:
+    - name: "client"
+      source_file: "client.py"
+      function: "client_bqc_streaming"
+      method: "compile"
+      method_args: ["server", "{var:n}"]
+      method_kwargs:
+        singular_comm_ops: "{var:singular_comm_ops}"
+      result_tuple_index: 1
+      output_file: "{source_name}.hir.mlir"
+
+    - name: "server"
+      source_file: "server.py"
+      function: "server_bqc_streaming"
+      method: "compile"
+      method_args: ["client", "{var:n}"]
+      method_kwargs:
+        singular_comm_ops: "{var:singular_comm_ops}"
+      result_tuple_index: 1
+      output_file: "{source_name}.hir.mlir"
+
+    tools:
+      optimizer:
+        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-opt"
+        base_flags: []
+
+      translator:
+        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-translate"
+        base_flags: []
+        flags: []
+
+    variants:
+    - name: "bqc"
+      optimizer_passes:
+      - name: "step1_hir_to_mir"
+        flags: ["--lower-qoala-hir-to-mir"]
+        output_file: "{source_name}.1.mir.mlir"
+
+      - name: "step2_mir_to_lir"
+        flags: ["--lower-qoala-mir-to-lir"]
+        output_file: "{source_name}.2.lir.mlir"
+
+      - name: "step4_opt"
+        flags: ["--qoalahost-reorder-blocks"]
+        output_file: "{source_name}.4.opt.lir.mlir"
+
+      program_variants:
+      - name: "unoptimized"
+        input_pass: "step2_mir_to_lir"
+        flags: ["--mlir-to-iqoala"]
+        output_file: "{source_name}.unoptimized.iqoala"
+
+      - name: "optimized"
+        input_pass: "step4_opt"
+        flags: ["--mlir-to-iqoala"]
+        output_file: "{source_name}.optimized.iqoala"
+
+  generator:
+    type: "compare"
+    params:
+      programs:
+      - label: "unoptimized"
+        program_variant: "unoptimized"
+      - label: "optimized"
+        program_variant: "optimized"
+
+  analyzer:
+    type: "simple"
+    params:
+      node: "client"
+      outcome_key: "%3"
+      success_value: 0

@@ -1,0 +1,16 @@
+{
+  "t1": 0,
+  "t2": 10000000000.0,
+  "single_gate_duration": 26600,
+  "two_gate_duration": 107000,
+  "single_gate_fid": 0.99,
+  "two_gate_fid": 0.95,
+  "host_instr_time": 15,
+  "host_peer_latency": 150,
+  "qnos_instr_time": 50000,
+  "latency": 2369000,
+  "link_duration": 6195600000.0,
+  "link_fid": 0.95,
+  "single_gate_error": 0.01,
+  "two_gate_error": 0.05
+}
