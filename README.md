@@ -248,7 +248,7 @@ After a successful `generate` run, the dataset folder is fully self-contained: i
 results/bqc-n1_ti_rdam3-leiden3/
 │
 ├── dataset.yaml                    # generated dataset: list of (program, params) entries
-├── meta.yaml                       # run metadata: timestamps, git hash, config snapshot
+├── meta.yaml                       # run metadata + sha256 of every compile artifact
 ├── environment.yaml                # Python/package versions at run time
 │
 ├── artifacts/
@@ -284,6 +284,21 @@ results/bqc-n1_ti_rdam3-leiden3/
 ```
 
 The key files are `dataset.yaml`, the flat list of simulation jobs (each entry names a program label, the iQoala file paths per node, and the hardware config — the simulator reads it to know what to run); `compilator_manifest.json`, the compiler's ledger that records the exact flags, output paths, and timing statistics for every source × pass combination (the plot scripts read this to draw compilation-time charts); the per-iteration `raw/<label>/results-N.pkl.gz` gzipped pickles containing the raw NetSquid output; and `analysis/summary.csv`, the human-readable summary `analyze` writes — one row per program label with columns `label`, `iterations`, `successes`, `success_rate`.
+
+### Integrity
+
+`generate` writes a `hashes:` map into `meta.yaml` with a SHA-256 for every compile-time artifact in the dataset: `params.json`, the runner script, the compilator manifest, every MLIR intermediate (`*.hir.mlir`, `*.mir.mlir`, `*.lir.mlir`), every `.iqoala` output, and every per-pass `stderr.log`. The simulation outputs (`raw/**/*.pkl.gz`, `raw/**/*.jsonl.gz`), the analysis CSVs, and `simulation_timing.json` are **not** hashed — they are deterministic given the seed sequence recorded in `raw/<label>/seeds.jsonl.gz`, but tamper-evidence stops at the compile boundary. To verify every hashed file in a dataset folder:
+
+```bash
+cd results/bqc-n1_ti_rdam3-leiden3
+python -c '
+import hashlib, pathlib, sys, yaml
+m = yaml.safe_load(open("meta.yaml"))
+bad = [p for p, h in m["hashes"].items()
+       if hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() != h.split(":",1)[1]]
+sys.exit(print("\n".join(bad) or "OK") or len(bad))
+'
+```
 
 ## Running the bundled benchmarks
 
