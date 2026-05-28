@@ -1,7 +1,7 @@
 version: 1
 
 name: "rotation-full-turn"
-author: "Anonymous"
+author: "Sacha Bernheim"
 metadata:
   tags: ["rotation", "t2", "full-turn", "compilator", "compare"]
   notes: "n=4 rot_Y, n_int=2*pi/2^3. Total=1*pi. Expected: 1."

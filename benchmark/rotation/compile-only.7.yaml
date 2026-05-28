@@ -1,7 +1,7 @@
 version: 1
 
 name: "rotation-compile-only"
-author: "Anonymous"
+author: "Sacha Bernheim"
 metadata:
   tags: ["rotation", "compile-only", "compilator"]
   notes: "n=7 rot_Y compile-only benchmark, 10000 repeats."

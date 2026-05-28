@@ -1,7 +1,7 @@
 version: 1
 
 name: "teleport-prepare_first"
-author: "Anonymous"
+author: "Sacha Bernheim"
 metadata:
   tags: ["example", "teleport"]
   notes: ""

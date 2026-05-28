@@ -115,7 +115,7 @@ A benchmark YAML is structured into a small top-level header (`name`, `author`, 
 version: 1
 
 name: "my-benchmark"          # used as default dataset folder name
-author: "Anonymous"
+author: "Sacha Bernheim"
 metadata:
   tags: ["bqc", "compile-only"]
   notes: >
