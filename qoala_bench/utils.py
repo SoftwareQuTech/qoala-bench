@@ -11,7 +11,8 @@ import yaml
 def load_config(config_path: str) -> Dict[str, Any]:
     """Loads the configuration from a JSON file."""
     with open(config_path, "r") as file:
-        return json.load(file)
+        data: Dict[str, Any] = json.load(file)
+    return data
 
 
 @dataclass(frozen=True)
@@ -62,4 +63,5 @@ def load_all_results_from_directory(directory: str):
 
 def load_yaml(yaml_path: str) -> Dict[str, Any]:
     with open(yaml_path, "r") as f:
-        return yaml.safe_load(f)
+        data: Dict[str, Any] = yaml.safe_load(f)
+    return data

@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
-
 from qoala.util.runner import AppResult
+
 from qoala_bench.analyzers.base import AnalyzeResult, DataAnalyzer
 from qoala_bench.registry import register_analyzer
 from qoala_bench.utils import SimulationResult, load_all_results_from_directory

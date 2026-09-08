@@ -12,6 +12,5 @@ class AnalyzeResult:
 
 class DataAnalyzer(ABC):
     @abstractmethod
-    def analyze(
-        self, dataset_dirs: List[str], params: Dict[str, Any]
-    ) -> AnalyzeResult: ...
+    def analyze(self, dataset_dirs: List[str], params: Dict[str, Any]) -> AnalyzeResult:
+        ...

@@ -172,9 +172,9 @@ class OptimizerPassModel(BaseModel):
         default_factory=dict
     )  # per-source flag overrides
     output_file: str = "{source_name}.{pass}.mlir"
-    depends_on: Optional[str] = (
-        None  # if None => previous pass, else named earlier pass
-    )
+    depends_on: Optional[
+        str
+    ] = None  # if None => previous pass, else named earlier pass
 
 
 class OptimizerToolModel(BaseModel):

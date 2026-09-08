@@ -4,7 +4,11 @@ import json
 import os
 from typing import Any, Dict, List
 
-from qoala_bench.config import GeneratorHeuristicParams, RootConfig
+from qoala_bench.config import (
+    GeneratorHeuristicParams,
+    NodeProgramFromCompilator,
+    RootConfig,
+)
 from qoala_bench.dataset import copy_program_iqoala
 from qoala_bench.mp_runner import NodeSpec, TaskSpec, run_tasks_multiprocess
 from qoala_bench.registry import register_generator
@@ -152,10 +156,15 @@ class HeuristicGenerator:
             return {"dataset_dir": str(dataset.root)}
 
         # --- Legacy mode (copy .iqoala from program_dir) ---
+        if gen_params.program_dir is None:
+            raise ValueError(
+                "Legacy mode requires generator.params.program_dir to be set."
+            )
+
         task_dir = dataset.artifacts_programs / gen_params.label
         copied = copy_program_iqoala(gen_params.program_dir, task_dir)
 
-        node_specs: List[NodeSpec] = []
+        node_specs = []
         for n in cfg_nodes:
             if not isinstance(n.file_path, str):
                 raise ValueError(

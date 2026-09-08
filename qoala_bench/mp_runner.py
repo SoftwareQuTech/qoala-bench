@@ -9,11 +9,14 @@ import pickle
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from tqdm import tqdm
 
 from qoala_bench.simulation import run
+
+if TYPE_CHECKING:
+    from multiprocessing.sharedctypes import Synchronized
 
 
 @dataclass(frozen=True)
@@ -82,7 +85,7 @@ def _worker_run_one_iteration(
     out_dir: str,
     iteration: int,
     on_failure: str,
-    done_counter: multiprocessing.Value,
+    done_counter: "Synchronized[int]",
 ):
     """
     Runs a single simulation iteration for an N-node task.
@@ -183,7 +186,7 @@ def run_tasks_multiprocess(
 
     done_counter = multiprocessing.Value("i", 0)
 
-    active = set()
+    active: set[multiprocessing.Process] = set()
     total = len(tasks) * iterations
     idx = 0
 

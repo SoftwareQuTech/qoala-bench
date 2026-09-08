@@ -14,4 +14,7 @@ class GenerateResult:
 
 class DataGenerator(ABC):
     @abstractmethod
-    def generate(self, cfg: RootConfig, dataset, comp_state=None) -> GenerateResult: ...
+    def generate(
+        self, cfg: RootConfig, dataset: DatasetPaths, comp_state=None
+    ) -> GenerateResult:
+        ...

@@ -30,7 +30,7 @@ def safe_mkdir(p: Path) -> None:
 
 def snapshot_environment(packages: Optional[list[str]] = None) -> Dict[str, object]:
     packages = packages or ["netsquid", "qoala", "numpy", "pydantic", "pyyaml"]
-    pkgs = {}
+    pkgs: Dict[str, Optional[str]] = {}
     for name in packages:
         try:
             pkgs[name] = pkg_version(name)

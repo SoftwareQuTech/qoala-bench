@@ -174,7 +174,8 @@ def cmd_generate(
         artifacts_root = getattr(dataset, "artifacts", None)
         if artifacts_root is None:
             artifacts_root = dataset.root / "artifacts"
-        comp_dir = artifacts_root / cfg.pipeline.compilator.artifact_subdir
+        assert comp_cfg is not None  # comp_state is only set when comp_cfg ran
+        comp_dir = artifacts_root / comp_cfg.artifact_subdir
         if comp_dir.exists():
             for p in comp_dir.rglob("*.iqoala"):
                 rel = str(p.relative_to(dataset.root))
@@ -279,6 +280,7 @@ def cmd_analyze(dataset_dirs: list[str]) -> int:
                 f"Got '{analyzer_type}' and '{this_type}'."
             )
 
+    assert analyzer_type is not None and analyzer_params is not None
     analyzer_cls = ANALYZER_REGISTRY.get(analyzer_type)
     if analyzer_cls is None:
         raise ValueError(

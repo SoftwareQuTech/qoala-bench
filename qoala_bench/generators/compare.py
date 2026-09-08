@@ -69,7 +69,7 @@ def _resolve_node_file_path(
             return compilator_variant
         outs = comp_state.get("outputs", {})
         if isinstance(outs, dict) and len(outs) == 1:
-            return next(iter(outs.keys()))
+            return str(next(iter(outs.keys())))
         raise ValueError(
             "compilator_variant is required when comp_state contains multiple variants "
             f"(available: {list(outs.keys())})"
@@ -130,7 +130,8 @@ def _resolve_node_file_path(
                 return str(entry["translator"][pv])
             except KeyError as e:
                 raise KeyError(
-                    f"Cannot resolve translator output for variant='{v}', source='{src}', program_variant='{pv}'. Missing: {e}"
+                    f"Cannot resolve translator output for variant='{v}', "
+                    f"source='{src}', program_variant='{pv}'. Missing: {e}"
                 )
 
         # python stage output
@@ -200,6 +201,12 @@ class CompareGenerator:
                 continue
 
             # --- Legacy mode: copy from program_dir ---
+            if prog.program_dir is None:
+                raise ValueError(
+                    f"Program '{prog.label}' has neither program_variant nor "
+                    f"program_dir set."
+                )
+
             task_dir = dataset.artifacts_programs / prog.label
             copied = copy_program_iqoala(prog.program_dir, task_dir)
 
