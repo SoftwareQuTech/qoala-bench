@@ -8,7 +8,7 @@ metadata:
 
 params:
   # Global hardware / network configuration (JSON)
-  config_path: "examples/configs/test.json"
+  config_path: "examples/configs/nv.json"
 
   nodes:
     - node_name: alice

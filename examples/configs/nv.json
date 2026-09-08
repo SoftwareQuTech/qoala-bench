@@ -8,7 +8,9 @@
   "host_instr_time": 15,
   "host_peer_latency": 150,
   "qnos_instr_time": 50000,
-  "latency": 1e5,
+  "latency": 100000.0,
   "link_duration": 2300000000,
-  "link_fid": 0.828
+  "link_fid": 0.828,
+  "single_gate_error": 0.005,
+  "two_gate_error": 0.03
 }
