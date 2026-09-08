@@ -51,7 +51,7 @@ pipeline:
     python_sources:
       - name: "client"
         source_file: "client.py"
-        function: "client_line_graph"
+        function: "client_bqc_streaming"
         method: "compile"
         method_args: ["server", "{var:n}"]
         method_kwargs:
@@ -61,7 +61,7 @@ pipeline:
 
       - name: "server"
         source_file: "server.py"
-        function: "server_line_graph"
+        function: "server_bqc_streaming"
         method: "compile"
         method_args: ["client", "{var:n}"]
         method_kwargs:
@@ -71,7 +71,7 @@ pipeline:
 
     tools:
       optimizer:
-        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-opt"
+        bin: "qoala-opt"
         base_flags: []
           # - "--qoala-opt-single-gate-duration={json:single_gate_duration}"
           # - "--qoala-opt-single-gate-error={json:single_gate_fid}"
@@ -85,7 +85,7 @@ pipeline:
           # - "--qoala-opt-qubit-lifetime={json:t2}"
 
       translator:
-        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-translate"
+        bin: "qoala-translate"
         base_flags: []
         flags: []   # global translator flags (if any)
 
