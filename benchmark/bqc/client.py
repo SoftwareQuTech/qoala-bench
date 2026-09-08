@@ -58,13 +58,13 @@ def client_bqc_streaming(server: str, n: int):
         send_int(s, corrections[1][1])
 
         for i in range(n - 2):
-            send_int(s, Int(0))             # delta_i = 0
-            ss.append(recv_int(s))          # s_i
+            send_int(s, Int(0))  # delta_i = 0
+            ss.append(recv_int(s))  # s_i
             send_int(s, corrections[i + 2][0])
             send_int(s, corrections[i + 2][1])
 
-        send_int(s, Int(0))                 # delta_{n-2} = 0
-        ss.append(recv_int(s))              # s_{n-2}
+        send_int(s, Int(0))  # delta_{n-2} = 0
+        ss.append(recv_int(s))  # s_{n-2}
 
     out_raw = recv_int(s)
 

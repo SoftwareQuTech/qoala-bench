@@ -35,7 +35,6 @@ from qoala_bench.simulation import (  # noqa: E402
     _set_qstate_formalism,
 )
 
-
 # ---------------------------------------------------------------------------
 # _peer_id_inputs
 # ---------------------------------------------------------------------------
@@ -111,8 +110,8 @@ def test_set_qstate_formalism_rejects_unknown_value():
 @pytest.mark.parametrize(
     "n_nodes, expected_count",
     [
-        (2, 1),   # one edge
-        (3, 3),   # triangle
+        (2, 1),  # one edge
+        (3, 3),  # triangle
         (4, 6),
         (5, 10),
     ],

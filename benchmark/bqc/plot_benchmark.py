@@ -40,7 +40,7 @@ plt.rcParams.update(
 )
 
 _LINE_COLORS = {
-    "optimized":   "#2196F3",
+    "optimized": "#2196F3",
     "unoptimized": "#FF9800",
 }
 
@@ -48,11 +48,11 @@ _LINE_COLORS = {
 # Ordered compilation stages shown in the bar chart.
 # Each entry: (internal_key, display_label, bar_color)
 _STAGE_ORDER = [
-    ("python",           "Python → HIR",   "#4FC3F7"),
-    ("step1_hir_to_mir", "HIR → MIR",      "#81C784"),
-    ("step2_mir_to_lir", "MIR → LIR",      "#FFB74D"),
-    ("step4_opt",        "Reorder blocks",  "#F06292"),
-    ("translation",      "Translation",     "#CE93D8"),
+    ("python", "Python → HIR", "#4FC3F7"),
+    ("step1_hir_to_mir", "HIR → MIR", "#81C784"),
+    ("step2_mir_to_lir", "MIR → LIR", "#FFB74D"),
+    ("step4_opt", "Reorder blocks", "#F06292"),
+    ("translation", "Translation", "#CE93D8"),
 ]
 _STAGE_KEYS = {key for key, _, _ in _STAGE_ORDER}
 
@@ -64,8 +64,8 @@ _, _DOMINANT_LABEL, _DOMINANT_COLOR = next(
 _SRC_COLORS = ["#1565C0", "#E65100", "#2E7D32", "#6A1B9A"]
 
 # Colours used in the reorder-blocks chart to highlight parity structure
-_COLOR_SERVER      = "#66BB6A"  # green  – server (all n)
-_COLOR_CLIENT_ODD  = "#42A5F5"  # blue   – client, odd n
+_COLOR_SERVER = "#66BB6A"  # green  – server (all n)
+_COLOR_CLIENT_ODD = "#42A5F5"  # blue   – client, odd n
 _COLOR_CLIENT_EVEN = "#FFA726"  # orange – client, even n
 
 
@@ -113,7 +113,8 @@ def _pass_outputs_from_manifest(manifest: dict) -> dict[str, dict[str, str]]:
     variants = manifest.get("variants", [])
     target = next(
         (
-            v for v in variants
+            v
+            for v in variants
             if v.get("name", "").lower() not in ("optimized", "unoptimized")
         ),
         variants[0] if variants else None,
@@ -206,24 +207,36 @@ def plot_success(
     opt_vals, unopt_vals = [], []
     for n in ns:
         df = summaries[n]
-        opt_row   = df[df["task"] == "optimized"]
+        opt_row = df[df["task"] == "optimized"]
         unopt_row = df[df["task"] == "unoptimized"]
         opt_vals.append(
-            float(opt_row["success_percentage"].iloc[0]) if not opt_row.empty else float("nan")
+            float(opt_row["success_percentage"].iloc[0])
+            if not opt_row.empty
+            else float("nan")
         )
         unopt_vals.append(
-            float(unopt_row["success_percentage"].iloc[0]) if not unopt_row.empty else float("nan")
+            float(unopt_row["success_percentage"].iloc[0])
+            if not unopt_row.empty
+            else float("nan")
         )
 
     ax.plot(
-        ns, opt_vals,
-        marker="o", linewidth=2, markersize=7,
-        color=_LINE_COLORS["optimized"], label="Sim. optimized",
+        ns,
+        opt_vals,
+        marker="o",
+        linewidth=2,
+        markersize=7,
+        color=_LINE_COLORS["optimized"],
+        label="Sim. optimized",
     )
     ax.plot(
-        ns, unopt_vals,
-        marker="s", linewidth=2, markersize=7,
-        color=_LINE_COLORS["unoptimized"], label="Sim. unoptimized",
+        ns,
+        unopt_vals,
+        marker="s",
+        linewidth=2,
+        markersize=7,
+        color=_LINE_COLORS["unoptimized"],
+        label="Sim. unoptimized",
     )
 
     # ESP product overlay (dashed, same colour per variant)
@@ -233,25 +246,33 @@ def plot_success(
             if n in manifests:
                 analysis = load_analysis_from_manifest(manifests[n])
                 esp = analysis.get("esp", {})
-                v_opt   = esp.get("opt")
+                v_opt = esp.get("opt")
                 v_unopt = esp.get("unopt")
-                esp_opt.append(v_opt   * 100.0 if v_opt   is not None else float("nan"))
-                esp_unopt.append(v_unopt * 100.0 if v_unopt is not None else float("nan"))
+                esp_opt.append(v_opt * 100.0 if v_opt is not None else float("nan"))
+                esp_unopt.append(
+                    v_unopt * 100.0 if v_unopt is not None else float("nan")
+                )
             else:
                 esp_opt.append(float("nan"))
                 esp_unopt.append(float("nan"))
 
         if any(not np.isnan(v) for v in esp_opt):
             ax.plot(
-                ns, esp_opt,
-                linewidth=2, linestyle="--",
-                color=_LINE_COLORS["optimized"], label="ESP optimized",
+                ns,
+                esp_opt,
+                linewidth=2,
+                linestyle="--",
+                color=_LINE_COLORS["optimized"],
+                label="ESP optimized",
             )
         if any(not np.isnan(v) for v in esp_unopt):
             ax.plot(
-                ns, esp_unopt,
-                linewidth=2, linestyle="--",
-                color=_LINE_COLORS["unoptimized"], label="ESP unoptimized",
+                ns,
+                esp_unopt,
+                linewidth=2,
+                linestyle="--",
+                color=_LINE_COLORS["unoptimized"],
+                label="ESP unoptimized",
             )
 
     ax.set_xlabel("n", fontsize=14)
@@ -276,15 +297,25 @@ def plot_qmem(
     data: dict[str, list[float]] = {"unopt": [], "opt": []}
 
     for n in ns:
-        qmem = load_analysis_from_manifest(manifests[n]).get("qmem", {}) if n in manifests else {}
+        qmem = (
+            load_analysis_from_manifest(manifests[n]).get("qmem", {})
+            if n in manifests
+            else {}
+        )
         for suffix in ("unopt", "opt"):
             v = qmem.get(src, {}).get(suffix)
             data[suffix].append(v * 100.0 if v is not None else float("nan"))
 
-    for suffix, label, marker in [("opt", "Optimized", "o"), ("unopt", "Unoptimized", "s")]:
+    for suffix, label, marker in [
+        ("opt", "Optimized", "o"),
+        ("unopt", "Unoptimized", "s"),
+    ]:
         ax.plot(
-            ns, data[suffix],
-            marker=marker, linewidth=2, markersize=6,
+            ns,
+            data[suffix],
+            marker=marker,
+            linewidth=2,
+            markersize=6,
             color=_LINE_COLORS["optimized" if suffix == "opt" else "unoptimized"],
             label=label,
         )
@@ -321,7 +352,9 @@ def plot_esp_sources(
             for src in ("client", "server"):
                 for suffix in ("opt", "unopt"):
                     v = esp_src.get(src, {}).get(suffix)
-                    data[src][suffix].append(v * 100.0 if v is not None else float("nan"))
+                    data[src][suffix].append(
+                        v * 100.0 if v is not None else float("nan")
+                    )
         else:
             for src in ("client", "server"):
                 for suffix in ("opt", "unopt"):
@@ -335,9 +368,13 @@ def plot_esp_sources(
             if any(not np.isnan(v) for v in vals):
                 color = _LINE_COLORS["optimized" if suffix == "opt" else "unoptimized"]
                 ax.plot(
-                    ns, vals,
-                    marker=mk, linewidth=2, markersize=6,
-                    linestyle=ls, color=color,
+                    ns,
+                    vals,
+                    marker=mk,
+                    linewidth=2,
+                    markersize=6,
+                    linestyle=ls,
+                    color=color,
                     label=f"{src.capitalize()} {suffix}",
                 )
 
@@ -401,7 +438,9 @@ def _make_compilation_figure(
         for i, src in enumerate(all_sources)
     }
     x_base = np.arange(n_groups)
-    src_color = {src: _SRC_COLORS[i % len(_SRC_COLORS)] for i, src in enumerate(all_sources)}
+    src_color = {
+        src: _SRC_COLORS[i % len(_SRC_COLORS)] for i, src in enumerate(all_sources)
+    }
 
     fig, ax = plt.subplots(figsize=(9, 5))
 
@@ -412,13 +451,26 @@ def _make_compilation_figure(
             heights = np.array(
                 [all_data[ns[i]].get(src, {}).get(sk, 0.0) for i in range(n_groups)]
             )
-            ax.bar(x_pos, heights, bar_w,
-                   bottom=bottoms,
-                   color=sc, edgecolor="white", linewidth=0.4,
-                   zorder=3)
+            ax.bar(
+                x_pos,
+                heights,
+                bar_w,
+                bottom=bottoms,
+                color=sc,
+                edgecolor="white",
+                linewidth=0.4,
+                zorder=3,
+            )
             bottoms += heights
-        ax.text(x_base[-1] + src_offset[src], bottoms[-1] * 1.02,
-                src, ha="center", va="bottom", fontsize=10, color=src_color[src])
+        ax.text(
+            x_base[-1] + src_offset[src],
+            bottoms[-1] * 1.02,
+            src,
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            color=src_color[src],
+        )
 
     ax.set_xticks(x_base, [str(n) for n in ns], fontsize=12)
     ax.set_xlabel("n  (number of qubits)", fontsize=12)
@@ -426,7 +478,10 @@ def _make_compilation_figure(
     ax.grid(True, axis="y", alpha=0.22, zorder=0)
     ax.legend(
         handles=[Patch(facecolor=c, label=l) for _, l, c in stage_list],
-        fontsize=11, loc="upper left", framealpha=0.85, edgecolor="#ccc",
+        fontsize=11,
+        loc="upper left",
+        framealpha=0.85,
+        edgecolor="#ccc",
     )
     fig.tight_layout()
     return fig
@@ -456,12 +511,26 @@ def plot_compilation_reorder(
     for src in all_sources:
         color = _COLOR_SERVER if src == "server" else _COLOR_CLIENT_ODD
         x_pos = x_base + src_offset[src]
-        heights = np.array([all_data[n].get(src, {}).get(_DOMINANT_KEY, 0.0) for n in ns])
-        ax.bar(x_pos, heights, bar_w,
-               color=color, edgecolor="white", linewidth=0.4,
-               zorder=3)
-        ax.text(x_base[-1] + src_offset[src], heights[-1] * 1.02,
-                src, ha="center", va="bottom", fontsize=10)
+        heights = np.array(
+            [all_data[n].get(src, {}).get(_DOMINANT_KEY, 0.0) for n in ns]
+        )
+        ax.bar(
+            x_pos,
+            heights,
+            bar_w,
+            color=color,
+            edgecolor="white",
+            linewidth=0.4,
+            zorder=3,
+        )
+        ax.text(
+            x_base[-1] + src_offset[src],
+            heights[-1] * 1.02,
+            src,
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
 
     ax.set_xticks(x_base, [str(n) for n in ns], fontsize=12)
     ax.set_xlabel("n  (number of qubits)", fontsize=12)
@@ -469,10 +538,13 @@ def plot_compilation_reorder(
     ax.grid(True, axis="y", alpha=0.22, zorder=0)
     ax.legend(
         handles=[
-            Patch(facecolor=_COLOR_SERVER,     label="Server"),
+            Patch(facecolor=_COLOR_SERVER, label="Server"),
             Patch(facecolor=_COLOR_CLIENT_ODD, label="Client"),
         ],
-        fontsize=11, loc="upper left", framealpha=0.85, edgecolor="#ccc",
+        fontsize=11,
+        loc="upper left",
+        framealpha=0.85,
+        edgecolor="#ccc",
     )
     fig.tight_layout()
     return fig
@@ -505,7 +577,8 @@ def parse_args() -> argparse.Namespace:
         help="Mapping of integer n to dataset folder, e.g. 1=results/bqc-streaming-n1",
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         default=".",
         metavar="DIR",
         help="Output directory for plot files (default: current directory)",
@@ -563,7 +636,10 @@ def main() -> int:
 
         manifest = load_manifest(mapping[n])
         if manifest is None:
-            print(f"Warning: manifest not found for n={n}, compilation plots will be skipped", file=sys.stderr)
+            print(
+                f"Warning: manifest not found for n={n}, compilation plots will be skipped",
+                file=sys.stderr,
+            )
         else:
             manifests[n] = manifest
 
@@ -591,7 +667,9 @@ def main() -> int:
             for src in ("client", "server"):
                 fig, ax = plt.subplots(figsize=(8, 5))
                 plot_qmem(ax, ns_m, manifests, src=src)
-                ax.set_title(f"Qubit memory efficiency — {src.capitalize()}", fontsize=15)
+                ax.set_title(
+                    f"Qubit memory efficiency — {src.capitalize()}", fontsize=15
+                )
                 fig.tight_layout()
                 out = os.path.join(args.output, f"qmem_efficiency_{src}.{args.format}")
                 fig.savefig(out, dpi=150)
@@ -625,7 +703,10 @@ def main() -> int:
         print(f"Saved: {out_o}")
         plt.close(fig_o)
     else:
-        print("No compilator manifests found; skipping compilation time plots.", file=sys.stderr)
+        print(
+            "No compilator manifests found; skipping compilation time plots.",
+            file=sys.stderr,
+        )
 
     return 0
 

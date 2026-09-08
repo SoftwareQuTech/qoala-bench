@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 
 from qoala_bench.params_schema import (
-    ConfigValidationError,
     REQUIRED_CONFIG_KEYS,
+    ConfigValidationError,
     validate_simulation_config,
 )
 
@@ -145,5 +145,5 @@ def test_zero_duration_accepted():
 def test_integer_and_float_both_accepted():
     cfg = _valid_config()
     cfg["t1"] = 1_000_000_000  # int
-    cfg["t2"] = 1.5e9          # float
+    cfg["t2"] = 1.5e9  # float
     validate_simulation_config(cfg)

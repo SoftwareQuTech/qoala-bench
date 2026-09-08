@@ -26,7 +26,6 @@ from qoala_bench.analyzers.base import AnalyzeResult, DataAnalyzer  # noqa: E402
 from qoala_bench.analyzers.noop import NoopAnalyzer  # noqa: E402
 from qoala_bench.registry import ANALYZER_REGISTRY  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Base class / registry wiring
 # ---------------------------------------------------------------------------

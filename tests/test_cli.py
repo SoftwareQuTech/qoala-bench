@@ -9,9 +9,8 @@ require ``qoala-opt`` / ``qoala-translate`` / NetSquid to be available.
 
 from __future__ import annotations
 
-import yaml
-
 import pytest
+import yaml
 
 from qoala_bench import cli
 from qoala_bench.analyzers.base import AnalyzeResult, DataAnalyzer
@@ -224,7 +223,9 @@ def test_main_dispatches_generate(monkeypatch):
         return 0
 
     monkeypatch.setattr(cli, "cmd_generate", fake_generate)
-    monkeypatch.setattr("sys.argv", ["qs", "generate", "bench.yaml", "-o", "out", "--compilation-only"])
+    monkeypatch.setattr(
+        "sys.argv", ["qs", "generate", "bench.yaml", "-o", "out", "--compilation-only"]
+    )
 
     rc = cli.main()
     assert rc == 0

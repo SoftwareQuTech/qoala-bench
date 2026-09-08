@@ -48,8 +48,22 @@ plt.rcParams.update(
 # ---------------------------------------------------------------------------
 
 _LINE_STYLES = {
-    "optimized":   dict(color="#2196F3", marker="o", linestyle="-",  linewidth=2, markersize=7, label="optimized"),
-    "unoptimized": dict(color="#FF9800", marker="s", linestyle="--", linewidth=2, markersize=7, label="unoptimized"),
+    "optimized": dict(
+        color="#2196F3",
+        marker="o",
+        linestyle="-",
+        linewidth=2,
+        markersize=7,
+        label="optimized",
+    ),
+    "unoptimized": dict(
+        color="#FF9800",
+        marker="s",
+        linestyle="--",
+        linewidth=2,
+        markersize=7,
+        label="unoptimized",
+    ),
 }
 
 
@@ -115,7 +129,8 @@ def load_analysis_from_manifest(manifest: dict) -> dict:
     variants = manifest.get("variants", [])
     target = next(
         (
-            v for v in variants
+            v
+            for v in variants
             if v.get("name", "").lower() not in ("optimized", "unoptimized")
         ),
         variants[0] if variants else None,
@@ -167,19 +182,19 @@ def load_analysis_from_manifest(manifest: dict) -> dict:
 
 # Lowering graph: stages on the unoptimized path + unoptimized translation
 _STAGES_LOWERING = [
-    ("python",           "Python → HIR",    "#4FC3F7"),
-    ("step1_hir_to_mir", "HIR → MIR",       "#81C784"),
-    ("step2_mir_to_lir", "MIR → LIR",       "#FFB74D"),
-    ("translation_unopt","Translation",      "#CE93D8"),
+    ("python", "Python → HIR", "#4FC3F7"),
+    ("step1_hir_to_mir", "HIR → MIR", "#81C784"),
+    ("step2_mir_to_lir", "MIR → LIR", "#FFB74D"),
+    ("translation_unopt", "Translation", "#CE93D8"),
 ]
 
 # Optimizations graph: the two rotation-specific passes + their lowering + opt translation
 _STAGES_OPT = [
-    ("step3_rotfold",        "Rotation folding", "#EF5350"),
-    ("step4_hir_to_mir_opt", "HIR → MIR (opt)",  "#81C784"),
-    ("step5_mir_to_lir_opt", "MIR → LIR (opt)",  "#FFB74D"),
-    ("step6_reorder",        "Reorder blocks",   "#F06292"),
-    ("translation_opt",      "Translation",      "#CE93D8"),
+    ("step3_rotfold", "Rotation folding", "#EF5350"),
+    ("step4_hir_to_mir_opt", "HIR → MIR (opt)", "#81C784"),
+    ("step5_mir_to_lir_opt", "MIR → LIR (opt)", "#FFB74D"),
+    ("step6_reorder", "Reorder blocks", "#F06292"),
+    ("translation_opt", "Translation", "#CE93D8"),
 ]
 
 _ALL_STAGE_KEYS = {k for k, _, _ in _STAGES_LOWERING + _STAGES_OPT}
@@ -191,7 +206,7 @@ def _stage_key(stage: dict) -> str | None:
     if s == "python":
         return "python"
     if s == "optimizer":
-        return stage.get("pass")   # "step1_hir_to_mir", "step3_rotfold", etc.
+        return stage.get("pass")  # "step1_hir_to_mir", "step3_rotfold", etc.
     if s == "translator":
         pv = stage.get("program_variant", "")
         return "translation_unopt" if pv == "unoptimized" else "translation_opt"
@@ -246,12 +261,30 @@ def plot_success(
         for label in _LINE_STYLES:
             row = df[df["task"] == label]
             series[label].append(
-                float(row["success_percentage"].iloc[0]) if not row.empty else float("nan")
+                float(row["success_percentage"].iloc[0])
+                if not row.empty
+                else float("nan")
             )
 
     sim_styles = {
-        "optimized":   dict(**{k: v for k, v in _LINE_STYLES["optimized"].items() if k not in ("label", "linestyle")}, linestyle="-", label="Sim. optimized"),
-        "unoptimized": dict(**{k: v for k, v in _LINE_STYLES["unoptimized"].items() if k not in ("label", "linestyle")}, linestyle="-", label="Sim. unoptimized"),
+        "optimized": dict(
+            **{
+                k: v
+                for k, v in _LINE_STYLES["optimized"].items()
+                if k not in ("label", "linestyle")
+            },
+            linestyle="-",
+            label="Sim. optimized",
+        ),
+        "unoptimized": dict(
+            **{
+                k: v
+                for k, v in _LINE_STYLES["unoptimized"].items()
+                if k not in ("label", "linestyle")
+            },
+            linestyle="-",
+            label="Sim. unoptimized",
+        ),
     }
     for label, style in sim_styles.items():
         ax.plot(ns, series[label], **style)
@@ -265,23 +298,33 @@ def plot_success(
                 esp = analysis.get("esp", {})
                 v_opt = esp.get("opt")
                 v_unopt = esp.get("unopt")
-                esp_series["opt"].append(v_opt * 100.0 if v_opt is not None else float("nan"))
-                esp_series["unopt"].append(v_unopt * 100.0 if v_unopt is not None else float("nan"))
+                esp_series["opt"].append(
+                    v_opt * 100.0 if v_opt is not None else float("nan")
+                )
+                esp_series["unopt"].append(
+                    v_unopt * 100.0 if v_unopt is not None else float("nan")
+                )
             else:
                 esp_series["opt"].append(float("nan"))
                 esp_series["unopt"].append(float("nan"))
 
         if any(not np.isnan(v) for v in esp_series["opt"]):
             ax.plot(
-                ns, esp_series["opt"],
-                linewidth=2, linestyle="--",
-                color=_LINE_STYLES["optimized"]["color"], label="ESP optimized",
+                ns,
+                esp_series["opt"],
+                linewidth=2,
+                linestyle="--",
+                color=_LINE_STYLES["optimized"]["color"],
+                label="ESP optimized",
             )
         if any(not np.isnan(v) for v in esp_series["unopt"]):
             ax.plot(
-                ns, esp_series["unopt"],
-                linewidth=2, linestyle="--",
-                color=_LINE_STYLES["unoptimized"]["color"], label="ESP unoptimized",
+                ns,
+                esp_series["unopt"],
+                linewidth=2,
+                linestyle="--",
+                color=_LINE_STYLES["unoptimized"]["color"],
+                label="ESP unoptimized",
             )
 
     # Dynamic y-axis scaling with 15% padding, snapped to 5 pp (include ESP)
@@ -292,7 +335,7 @@ def plot_success(
         lo, hi = min(all_vals), max(all_vals)
         span = max(hi - lo, 5.0)
         pad = span * 0.15
-        y_min = max(0.0,   lo - pad)
+        y_min = max(0.0, lo - pad)
         y_max = min(100.0, hi + pad)
         y_min = 5.0 * (y_min // 5)
         y_max = 5.0 * (-(-y_max // 5))
@@ -340,9 +383,13 @@ def plot_qmem(
     for suffix in ("unopt", "opt"):
         color = _LINE_STYLES["optimized" if suffix == "opt" else "unoptimized"]["color"]
         ax.plot(
-            ns, data[suffix],
-            marker="o", linewidth=2, markersize=6,
-            color=color, label=suffix.capitalize(),
+            ns,
+            data[suffix],
+            marker="o",
+            linewidth=2,
+            markersize=6,
+            color=color,
+            label=suffix.capitalize(),
         )
 
     ax.set_xlabel("Number of rotations", fontsize=14)
@@ -373,7 +420,9 @@ def _make_compilation_figure(
         for i, src in enumerate(all_sources)
     }
     x_base = np.arange(n_groups)
-    src_color = {src: _SRC_COLORS[i % len(_SRC_COLORS)] for i, src in enumerate(all_sources)}
+    src_color = {
+        src: _SRC_COLORS[i % len(_SRC_COLORS)] for i, src in enumerate(all_sources)
+    }
 
     fig, ax = plt.subplots(figsize=(9, 5))
 
@@ -384,13 +433,26 @@ def _make_compilation_figure(
             heights = np.array(
                 [all_data[ns[i]].get(src, {}).get(sk, 0.0) for i in range(n_groups)]
             )
-            ax.bar(x_pos, heights, bar_w,
-                   bottom=bottoms,
-                   color=sc, edgecolor="white", linewidth=0.4,
-                   zorder=3)
+            ax.bar(
+                x_pos,
+                heights,
+                bar_w,
+                bottom=bottoms,
+                color=sc,
+                edgecolor="white",
+                linewidth=0.4,
+                zorder=3,
+            )
             bottoms += heights
-        ax.text(x_base[-1] + src_offset[src], bottoms[-1] * 1.02,
-                src, ha="center", va="bottom", fontsize=10, color=src_color[src])
+        ax.text(
+            x_base[-1] + src_offset[src],
+            bottoms[-1] * 1.02,
+            src,
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            color=src_color[src],
+        )
 
     ax.set_xticks(x_base, [str(n) for n in ns], fontsize=12)
     ax.set_xlabel("Number of rotations", fontsize=12)
@@ -398,7 +460,10 @@ def _make_compilation_figure(
     ax.grid(True, axis="y", alpha=0.22, zorder=0)
     ax.legend(
         handles=[Patch(facecolor=c, label=l) for _, l, c in stage_list],
-        fontsize=11, loc="upper left", framealpha=0.85, edgecolor="#ccc",
+        fontsize=11,
+        loc="upper left",
+        framealpha=0.85,
+        edgecolor="#ccc",
     )
     if title:
         ax.set_title(title, fontsize=14)
@@ -411,7 +476,10 @@ def plot_compilation_lowering(ns: list, manifests: dict) -> plt.Figure:
     all_data = {n: compile_times_by_stage(manifests[n]) for n in ns}
     all_sources = sorted({src for d in all_data.values() for src in d})
     return _make_compilation_figure(
-        ns, all_data, all_sources, _STAGES_LOWERING,
+        ns,
+        all_data,
+        all_sources,
+        _STAGES_LOWERING,
         title="Lowering pipeline",
     )
 
@@ -421,7 +489,10 @@ def plot_compilation_optimizations(ns: list, manifests: dict) -> plt.Figure:
     all_data = {n: compile_times_by_stage(manifests[n]) for n in ns}
     all_sources = sorted({src for d in all_data.values() for src in d})
     return _make_compilation_figure(
-        ns, all_data, all_sources, _STAGES_OPT,
+        ns,
+        all_data,
+        all_sources,
+        _STAGES_OPT,
         title="Optimization pipeline",
     )
 
@@ -443,7 +514,8 @@ def parse_args() -> argparse.Namespace:
         help="Mapping of integer n to dataset folder, e.g. 1=results/rotation-n1_ti_200",
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         default=".",
         metavar="DIR",
         help="Output directory for plot files (default: current directory)",
@@ -521,8 +593,13 @@ def main() -> int:
     # --- Plot 1: success probability (skipped in compilation-only mode) ---
     if not args.compilation_only:
         fig1, ax1 = plt.subplots(figsize=(8, 5))
-        plot_success(ax1, ns, summaries, title_suffix=args.title,
-                     manifests=manifests if manifests else None)
+        plot_success(
+            ax1,
+            ns,
+            summaries,
+            title_suffix=args.title,
+            manifests=manifests if manifests else None,
+        )
         fig1.tight_layout()
         out1 = os.path.join(args.output, f"success_probability.{args.format}")
         fig1.savefig(out1, dpi=150)
@@ -536,7 +613,9 @@ def main() -> int:
                 fig1b, ax1b = plt.subplots(figsize=(8, 5))
                 plot_qmem(ax1b, ns_qmem, manifests, src=src)
                 fig1b.tight_layout()
-                out1b = os.path.join(args.output, f"memory_efficiency_{src}.{args.format}")
+                out1b = os.path.join(
+                    args.output, f"memory_efficiency_{src}.{args.format}"
+                )
                 fig1b.savefig(out1b, dpi=150)
                 print(f"Saved: {out1b}")
                 plt.close(fig1b)
@@ -554,7 +633,10 @@ def main() -> int:
         fig3.savefig(out3, dpi=150)
         print(f"Saved: {out3}")
     else:
-        print("No compilator manifests found; skipping compilation time plots.", file=sys.stderr)
+        print(
+            "No compilator manifests found; skipping compilation time plots.",
+            file=sys.stderr,
+        )
 
     return 0
 

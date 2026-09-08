@@ -35,7 +35,6 @@ pytest.importorskip("netsquid")
 
 from qoala_bench.mp_runner import NodeSpec, TaskSpec, _queue_listener  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # NodeSpec / TaskSpec
 # ---------------------------------------------------------------------------
@@ -98,15 +97,17 @@ def _drain_listener(messages):
 
 def test_queue_listener_writes_pickled_result(tmp_path):
     out_dir = tmp_path / "raw" / "task"
-    _drain_listener([
-        {
-            "type": "result",
-            "label": "task",
-            "out_dir": str(out_dir),
-            "result": {"outcome": 0, "duration": 42},
-        },
-        "STOP",
-    ])
+    _drain_listener(
+        [
+            {
+                "type": "result",
+                "label": "task",
+                "out_dir": str(out_dir),
+                "result": {"outcome": 0, "duration": 42},
+            },
+            "STOP",
+        ]
+    )
 
     result_file = out_dir / "app_results.pkl.gz"
     assert result_file.is_file()
@@ -117,11 +118,23 @@ def test_queue_listener_writes_pickled_result(tmp_path):
 
 def test_queue_listener_appends_multiple_results_to_same_file(tmp_path):
     out_dir = tmp_path / "raw" / "task"
-    _drain_listener([
-        {"type": "result", "label": "t", "out_dir": str(out_dir), "result": {"i": 1}},
-        {"type": "result", "label": "t", "out_dir": str(out_dir), "result": {"i": 2}},
-        "STOP",
-    ])
+    _drain_listener(
+        [
+            {
+                "type": "result",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "result": {"i": 1},
+            },
+            {
+                "type": "result",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "result": {"i": 2},
+            },
+            "STOP",
+        ]
+    )
 
     loaded = []
     with gzip.open(out_dir / "app_results.pkl.gz", "rb") as f:
@@ -136,10 +149,17 @@ def test_queue_listener_appends_multiple_results_to_same_file(tmp_path):
 def test_queue_listener_writes_seed_record_jsonl(tmp_path):
     out_dir = tmp_path / "raw" / "t"
     record = {"iteration": 0, "seed": 1234, "status": "ok"}
-    _drain_listener([
-        {"type": "seed", "label": "t", "out_dir": str(out_dir), "seed_record": record},
-        "STOP",
-    ])
+    _drain_listener(
+        [
+            {
+                "type": "seed",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "seed_record": record,
+            },
+            "STOP",
+        ]
+    )
 
     seed_file = out_dir / "seeds.jsonl.gz"
     assert seed_file.is_file()
@@ -153,10 +173,12 @@ def test_queue_listener_skips_result_when_payload_is_none(tmp_path):
     """A ``"result"`` message with ``result=None`` must not crash and
     must not create an empty ``app_results.pkl.gz`` file."""
     out_dir = tmp_path / "raw" / "t"
-    _drain_listener([
-        {"type": "result", "label": "t", "out_dir": str(out_dir), "result": None},
-        "STOP",
-    ])
+    _drain_listener(
+        [
+            {"type": "result", "label": "t", "out_dir": str(out_dir), "result": None},
+            "STOP",
+        ]
+    )
     # Directory exists (created by os.makedirs(out_dir, exist_ok=True)),
     # but no result file should be written.
     assert out_dir.is_dir()
@@ -165,32 +187,51 @@ def test_queue_listener_skips_result_when_payload_is_none(tmp_path):
 
 def test_queue_listener_creates_missing_out_dir(tmp_path):
     out_dir = tmp_path / "deeply" / "nested" / "raw" / "t"
-    _drain_listener([
-        {"type": "result", "label": "t", "out_dir": str(out_dir), "result": {"x": 1}},
-        "STOP",
-    ])
+    _drain_listener(
+        [
+            {
+                "type": "result",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "result": {"x": 1},
+            },
+            "STOP",
+        ]
+    )
     assert (out_dir / "app_results.pkl.gz").is_file()
 
 
 def test_queue_listener_handles_interleaved_message_types(tmp_path):
     out_dir = tmp_path / "raw" / "t"
-    _drain_listener([
-        {"type": "result", "label": "t", "out_dir": str(out_dir), "result": {"i": 0}},
-        {
-            "type": "seed",
-            "label": "t",
-            "out_dir": str(out_dir),
-            "seed_record": {"iteration": 0, "status": "ok"},
-        },
-        {"type": "result", "label": "t", "out_dir": str(out_dir), "result": {"i": 1}},
-        {
-            "type": "seed",
-            "label": "t",
-            "out_dir": str(out_dir),
-            "seed_record": {"iteration": 1, "status": "ok"},
-        },
-        "STOP",
-    ])
+    _drain_listener(
+        [
+            {
+                "type": "result",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "result": {"i": 0},
+            },
+            {
+                "type": "seed",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "seed_record": {"iteration": 0, "status": "ok"},
+            },
+            {
+                "type": "result",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "result": {"i": 1},
+            },
+            {
+                "type": "seed",
+                "label": "t",
+                "out_dir": str(out_dir),
+                "seed_record": {"iteration": 1, "status": "ok"},
+            },
+            "STOP",
+        ]
+    )
 
     # Both files exist and have the expected number of records.
     with gzip.open(out_dir / "app_results.pkl.gz", "rb") as f:

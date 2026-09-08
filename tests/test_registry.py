@@ -29,7 +29,9 @@ class _DummyGenerator(DataGenerator):
 @pytest.fixture(autouse=True)
 def _isolate_registries(monkeypatch):
     """Snapshot and restore the two registries around each test."""
-    monkeypatch.setattr(registry, "GENERATOR_REGISTRY", dict(registry.GENERATOR_REGISTRY))
+    monkeypatch.setattr(
+        registry, "GENERATOR_REGISTRY", dict(registry.GENERATOR_REGISTRY)
+    )
     monkeypatch.setattr(registry, "ANALYZER_REGISTRY", dict(registry.ANALYZER_REGISTRY))
 
 

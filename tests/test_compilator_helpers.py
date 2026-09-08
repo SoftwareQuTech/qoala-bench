@@ -27,7 +27,6 @@ from qoala_bench.compilator import (
     _subst,
 )
 
-
 # ---------------------------------------------------------------------------
 # _sha256_bytes / _sha256_file
 # ---------------------------------------------------------------------------
@@ -232,7 +231,9 @@ def test_subst_multiple_tokens_of_same_kind():
 
 
 def test_subst_no_tokens_returns_input_unchanged():
-    assert _subst("plain string", json_cfg={}, variables={}, mapping={}) == "plain string"
+    assert (
+        _subst("plain string", json_cfg={}, variables={}, mapping={}) == "plain string"
+    )
 
 
 # ---------------------------------------------------------------------------

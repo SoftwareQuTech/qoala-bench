@@ -92,6 +92,7 @@ def test_inject_run_metadata_fills_uuid_ran_and_version():
     assert out.ran is not None
     # Parseable as ISO-8601 with timezone.
     from datetime import datetime
+
     parsed = datetime.fromisoformat(out.ran)
     assert parsed.tzinfo is not None
 

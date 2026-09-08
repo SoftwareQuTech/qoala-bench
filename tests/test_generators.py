@@ -29,10 +29,12 @@ import pytest
 pytest.importorskip("qoala")
 pytest.importorskip("netsquid")
 
-from qoala_bench.config import FromCompilatorRef, NodeProgramFromCompilator  # noqa: E402
+from qoala_bench.config import (  # noqa: E402
+    FromCompilatorRef,
+    NodeProgramFromCompilator,
+)
 from qoala_bench.generators import compare as _compare  # noqa: E402
 from qoala_bench.generators import heuristic as _heuristic  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -233,9 +235,7 @@ class TestCompareResolveNodeFilePath:
             program_variant="optimized",
         )
         n = _make_node(file_path=NodeProgramFromCompilator(from_compilator=ref))
-        comp_state = _comp_state(
-            paths={"translator": {"optimized": "/out/opt.iqoala"}}
-        )
+        comp_state = _comp_state(paths={"translator": {"optimized": "/out/opt.iqoala"}})
         out = _compare._resolve_node_file_path(n, comp_state=comp_state)
         assert out == "/out/opt.iqoala"
 
