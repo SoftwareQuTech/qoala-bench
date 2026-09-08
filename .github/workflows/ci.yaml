@@ -1,0 +1,106 @@
+name: General check
+
+# Every push, on every branch — the same condition qoala-sim uses.
+on: push
+
+# A newer push to the same branch makes the in-flight run obsolete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DEFAULT_PYTHON: "3.10"
+  SCIP_VERSION: "9.2.2"
+
+jobs:
+  lint:
+    name: Run linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Install and lint
+        env:
+          NETSQUIDPYPI_USER: ${{ secrets.NETSQUIDPYPI_USER }}
+          NETSQUIDPYPI_PWD: ${{ secrets.NETSQUIDPYPI_PWD }}
+        run: |
+          make install-dev
+          make lint
+
+  mypy:
+    name: Run mypy
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Install and type-check
+        env:
+          NETSQUIDPYPI_USER: ${{ secrets.NETSQUIDPYPI_USER }}
+          NETSQUIDPYPI_PWD: ${{ secrets.NETSQUIDPYPI_PWD }}
+        run: |
+          make install-dev
+          make mypy
+
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    needs: [lint, mypy]
+    strategy:
+      fail-fast: false
+      matrix:
+        # Upper bound: qoala-mlir publishes cp310-cp312 wheels only, and
+        # setup.cfg caps python_requires accordingly.
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install and test
+        env:
+          NETSQUIDPYPI_USER: ${{ secrets.NETSQUIDPYPI_USER }}
+          NETSQUIDPYPI_PWD: ${{ secrets.NETSQUIDPYPI_PWD }}
+        run: |
+          make install-dev
+          make tests
+
+  examples:
+    name: Run examples
+    runs-on: ubuntu-latest
+    needs: [lint, mypy]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # qoala-opt links against libscip.so.9.2 for its MILP reordering pass.
+      # The ubuntu24 package matches the ubuntu-latest runner image.
+      - name: Install SCIP runtime
+        run: |
+          curl -sSfL -o /tmp/scip.deb \
+            "https://www.scipopt.org/download/release/SCIPOptSuite-${SCIP_VERSION}-Linux-ubuntu24.deb"
+          sudo apt-get update
+          sudo apt-get install -y /tmp/scip.deb
+
+      - name: Download qoala-opt and qoala-translate
+        run: |
+          make tools
+          echo "${GITHUB_WORKSPACE}/.tools/bin" >> "${GITHUB_PATH}"
+
+      - name: Install and run examples
+        env:
+          NETSQUIDPYPI_USER: ${{ secrets.NETSQUIDPYPI_USER }}
+          NETSQUIDPYPI_PWD: ${{ secrets.NETSQUIDPYPI_PWD }}
+        run: |
+          make install-dev
+          make examples

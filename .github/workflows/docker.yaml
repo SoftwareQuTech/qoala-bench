@@ -1,0 +1,45 @@
+name: Docker image check
+
+# The image is a local development bootstrap and is never published (it
+# bundles licensed NetSquid). This workflow only keeps it from rotting: it
+# runs whenever something that feeds into the image changes.
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - docker-compose.yml
+      - setup.cfg
+      - pyproject.toml
+      - Makefile
+      - .github/workflows/docker.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-verify:
+    name: Build the image and run the tests and examples in it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: qoala-bench:ci
+          secrets: |
+            netsquid_user=${{ secrets.NETSQUIDPYPI_USER }}
+            netsquid_pwd=${{ secrets.NETSQUIDPYPI_PWD }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run the tests and examples inside the image
+        run: docker run --rm qoala-bench:ci make tests examples
