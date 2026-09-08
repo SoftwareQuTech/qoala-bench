@@ -35,3 +35,9 @@ report.xml
 .venv
 **results/
 **results_paper/
+
+# Local NetSquid credentials for docker compose
+.env
+
+# qoala-mlir binaries downloaded by `make tools`
+.tools/
