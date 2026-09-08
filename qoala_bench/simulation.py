@@ -12,7 +12,6 @@ import random
 from typing import Any, Dict, List, Tuple
 
 import netsquid as ns
-
 from qoala.lang.ehi import UnitModule
 from qoala.lang.parse import QoalaParser
 from qoala.lang.program import QoalaProgram
@@ -60,6 +59,12 @@ def create_procnode_cfg(
         ntf=NtfConfig.from_cls_name("GenericNtf"),
         determ_sched=determ,
         is_predictable=True,
+        # Required for correctness whenever the compiler reuses a qubit slot
+        # (block reordering does, from 3 rounds up): without it a local routine
+        # can run on a qubit still holding an unrelated block's state. Safe to
+        # enable here because the programs are compiler-generated and so carry
+        # complete block dependency annotations. Needs qoala >= 2.1.0.
+        check_qubit_ancestry=True,
     )
 
 
