@@ -64,11 +64,11 @@ pipeline:
 
     tools:
       optimizer:
-        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-opt"
+        bin: "qoala-opt"
         base_flags: []
 
       translator:
-        bin: "/home/spoukke/workspaces/tudelft/qoala-mlir/build/bin/qoala-translate"
+        bin: "qoala-translate"
         base_flags: []
         flags: []
 
