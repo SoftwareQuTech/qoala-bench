@@ -1,0 +1,26 @@
+# .git is excluded on purpose: setuptools-scm would otherwise derive a version
+# from it and invalidate the install layer on every commit. The Dockerfile
+# passes QOALA_BENCH_VERSION instead.
+.git
+.gitignore
+
+# Simulation output — large, and regenerated inside the container.
+results/
+results_paper/
+
+# Locally downloaded qoala-mlir binaries; the image fetches its own.
+.tools/
+
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+build/
+dist/
+.venv/
+.env
+.idea/
+.vscode/
+.ideas/

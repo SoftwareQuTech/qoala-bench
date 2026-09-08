@@ -1,0 +1,24 @@
+services:
+  qoala-bench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      secrets:
+        - netsquid_user
+        - netsquid_pwd
+    image: qoala-bench:latest
+    working_dir: /workspace/qoala-bench
+    volumes:
+      # Live-mount the checkout so edits are picked up without rebuilding.
+      # The package is installed editable, so this is all that is needed.
+      - .:/workspace/qoala-bench
+    stdin_open: true   # keep stdin open for interactive use (-i)
+    tty: true          # allocate a pseudo-TTY (-t)
+
+# NetSquid PyPI credentials, read from a local .env (see .env.example).
+# They are passed as build secrets, so they never end up in the image.
+secrets:
+  netsquid_user:
+    environment: NETSQUIDPYPI_USER
+  netsquid_pwd:
+    environment: NETSQUIDPYPI_PWD
